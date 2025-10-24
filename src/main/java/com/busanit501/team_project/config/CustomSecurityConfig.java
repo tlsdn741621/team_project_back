@@ -5,6 +5,8 @@ import com.busanit501.team_project.security.filter.APILoginFilter;
 import com.busanit501.team_project.security.filter.RefreshTokenFilter;
 import com.busanit501.team_project.security.filter.TokenCheckFilter;
 import com.busanit501.team_project.security.handler.APILoginSuccessHandler;
+import com.busanit501.team_project.security.handler.OAuth2AuthenticationSuccessHandler; // 추가
+import com.busanit501.team_project.service.MemberService; // 추가
 import com.busanit501.team_project.util.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -18,31 +20,29 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService; // 추가
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest; // 추가
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService; // 추가
+import org.springframework.security.oauth2.core.user.OAuth2User; // 추가
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler; // 추가
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import java.util.Arrays;
 
-// 작업 순서1
 @Log4j2
 @Configuration
-
 @EnableMethodSecurity
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class CustomSecurityConfig {
-    //추가 1-1
     private final APIUserDetailsService apiUserDetailsService;
     private final JWTUtil jwtUtil;
-
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    private final MemberService memberService; // 추가
+    private final PasswordEncoder passwordEncoder;
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
@@ -65,7 +65,7 @@ public class CustomSecurityConfig {
                 // 우리 코드에서 로그인을 담당하는 도구 옵션 추가.
                 .userDetailsService(apiUserDetailsService)
                 // 평문 암호화 해주는 도구 옵션 추가.
-                .passwordEncoder(passwordEncoder());
+                .passwordEncoder(passwordEncoder);
 
         // Get AuthenticationManager 세팅1
         AuthenticationManager authenticationManager =
@@ -111,7 +111,17 @@ public class CustomSecurityConfig {
         http.csrf(httpSecurityCsrfConfigurer -> httpSecurityCsrfConfigurer.disable());
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
+        // OAuth2 로그인 설정 추가
+        http.oauth2Login(oauth2 -> oauth2
+                .successHandler(oauth2AuthenticationSuccessHandler()) // 성공 핸들러 지정
+        );
+
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler() {
+        return new OAuth2AuthenticationSuccessHandler(jwtUtil, memberService);
     }
 
     private TokenCheckFilter tokenCheckFilter(JWTUtil jwtUtil, APIUserDetailsService apiUserDetailsService){

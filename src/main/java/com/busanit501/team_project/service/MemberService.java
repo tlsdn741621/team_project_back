@@ -11,5 +11,7 @@ public interface MemberService {
     boolean checkId(String memberId);
     MemberDTO getMember(String memberId);
     void changePassword(String memberId, ChangePasswordRequestDTO requestDTO);
-}
 
+    // 🔴 [확인] 이 메서드가 구현되어 있는지 확인
+    MemberDTO processSocialLogin(String registrationId, String socialId, String email, String nickname);
+}

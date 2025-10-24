@@ -1,23 +1,28 @@
 package com.busanit501.team_project.dto;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
-@Setter
-@ToString
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+
 public class MemberDTO {
-    private Long Id;
     private String memberId;
     private String userName;
     private String email;
     private String password;
+    private boolean social;
 
     public MemberDTO( String memberId, String userName, String email, String password) {
         this.memberId = memberId;
         this.userName = userName;
         this.email = email;
         this.password = password;
+        this.social = false; // 이 생성자로 호출되면 social은 false
     }
+
 }

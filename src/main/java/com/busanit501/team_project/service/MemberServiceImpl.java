@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Log4j2
 @RequiredArgsConstructor
 @Service
@@ -60,6 +62,8 @@ public class MemberServiceImpl implements MemberService{
                 .password(encodedPassword) // 암호화된 비밀번호
                 .userName(memberDTO.getUserName()) // 이름
                 .email(memberDTO.getEmail()) // 이메일
+                .social(memberDTO.isSocial())
+                .role("USER") // 기본 역할
                 .build();
 
         // DB 저장
@@ -111,5 +115,48 @@ public class MemberServiceImpl implements MemberService{
         apiuser.changePw(member.getPassword());
         // 4. 변경된 정보를 DB에 저장 (@Transactional에 의해 메서드 종료 시 자동 반영)
         memberRepository.save(member);
+    }
+
+    @Transactional
+    @Override
+    public MemberDTO processSocialLogin(String registrationId, String socialId, String email, String nickname) {
+        String memberId = registrationId + "_" + socialId; // 소셜 ID와 서비스 제공자를 결합하여 우리 앱의 memberId 생성
+
+        // 이미 존재하는 회원인지 확인
+        Optional<Member> result = memberRepository.findByMemberId(memberId);
+        Member member;
+
+        if (result.isPresent()) {
+            // 기존 회원인 경우
+            member = result.get();
+            log.info("Existing social user: {}", memberId);
+            // 필요시 회원 정보 업데이트 로직 추가
+        } else {
+            // 신규 회원인 경우
+            log.info("New social user: {}", memberId);
+            // 임시 비밀번호 생성 (소셜 로그인은 비밀번호가 필요 없지만, Member 엔티티의 제약조건 때문에 필요)
+            // 🔴 [수정] "socialpassword" 대신 UUID 등을 사용하거나 환경변수에서 가져오는 것이 더 안전합니다.
+            String tempPassword = passwordEncoder.encode("socialpassword");
+
+            member = Member.builder()
+                    .memberId(memberId)
+                    .password(tempPassword)
+                    .userName(nickname != null ? nickname : memberId)
+                    .email(email)
+                    .role("USER") // 🔴 [확인] role 필드명이 "ROLE_USER"가 아닌 "USER"인지 엔티티와 일치하는지 확인
+                    .social(true)
+                    .build();
+            memberRepository.save(member);
+
+            // APIUser에도 저장
+            APIUser apiUser = APIUser.builder()
+                    .memberId(member.getMemberId())
+                    .password(member.getPassword())
+                    .build();
+            apiUserRepository.save(apiUser);
+        }
+
+        // MemberDTO 반환 시 비밀번호는 제외
+        return new MemberDTO(member.getMemberId(), member.getUserName(), member.getEmail(), null);
     }
 }
