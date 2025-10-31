@@ -87,7 +87,7 @@ public class MemberServiceImpl implements MemberService{
                         member.getMemberId(),
                         member.getUserName(),
                         member.getEmail(),
-                        member.getPassword()))
+                        null)) // 비밀번호는 보안상 null로 처리
                 .orElse(null);
         log.info("memberService dto : " + dto);
         return dto;

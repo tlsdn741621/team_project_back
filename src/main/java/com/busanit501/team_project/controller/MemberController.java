@@ -12,6 +12,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/member")
 @Log4j2
@@ -51,5 +53,11 @@ public class MemberController {
             log.error("Password change error: ", e);
             return ResponseEntity.internalServerError().body("비밀번호 변경 중 오류가 발생했습니다.");
         }
+    }
+
+    @Tag(name = "로그아웃", description = "사용자 로그아웃")
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout() {
+        return ResponseEntity.ok(Map.of("message", "로그아웃 되었습니다."));
     }
 }
