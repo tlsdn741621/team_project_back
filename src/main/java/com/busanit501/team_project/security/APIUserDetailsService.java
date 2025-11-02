@@ -31,7 +31,11 @@ public class APIUserDetailsService implements UserDetailsService {
         APIUserDTO dto = new APIUserDTO(
                 apiUser.getMemberId(),
                 apiUser.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                apiUser.getUserName(),
+                apiUser.getEmail(),
+                apiUser.getRole(),
+                apiUser.isSocial(),
+                List.of(new SimpleGrantedAuthority("ROLE_" + (apiUser.getRole() != null && !apiUser.getRole().isEmpty() ? apiUser.getRole() : "USER")))
         );
 
         log.info("APIUserDetailsService - Created APIUserDTO : {}", dto);

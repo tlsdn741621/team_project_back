@@ -1,6 +1,5 @@
 package com.busanit501.team_project.security.handler;
 
-import com.busanit501.team_project.dto.MemberDTO;
 import com.busanit501.team_project.service.MemberService;
 import com.busanit501.team_project.util.JWTUtil;
 
@@ -24,7 +23,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     private final JWTUtil jwtUtil;
     private final MemberService memberService;
 
-    // 🌟 1. ServletException 제거
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         log.info("OAuth2 Login Success! Authentication: {}", authentication);
@@ -40,7 +38,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         if ("kakao".equals(registrationId)) {
             Map<String, Object> kakaoAccount = oAuth2User.getAttribute("kakao_account");
             if (kakaoAccount != null) {
-                // 🌟 2. 카카오 닉네임 추출 로직
                 Object profileObj = kakaoAccount.get("profile");
                 if (profileObj instanceof Map) {
                     Map<String, Object> profile = (Map<String, Object>) profileObj;
@@ -50,17 +47,26 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
             }
         } else if ("google".equals(registrationId)) {
             nickname = oAuth2User.getAttribute("name");
-            email = oAuth2User.getAttribute("email");
+        } else if ("naver".equals(registrationId)) { // 네이버 추가
+            Map<String, Object> responseMap = oAuth2User.getAttribute("response");
+            if (responseMap != null) {
+                socialId = (String) responseMap.get("id");
+                email = (String) responseMap.get("email");
+                nickname = (String) responseMap.get("nickname");
+                if (nickname == null || nickname.isEmpty()) {
+                    nickname = (String) responseMap.get("name"); // nickname이 없으면 name 필드 시도
+                }
+            }
         }
 
         log.info("Social Login Info - Id: {}, Email: {}, Nickname: {}", socialId, email, nickname);
 
-        // 2. 우리 앱의 회원 정보로 처리 (회원가입 또는 로그인)
-        // 🔴 [수정] 통합 메서드 processSocialLogin 호출
+        // 2. 회원 정보로 처리 (회원가입 또는 로그인)
+        // 통합 메서드 processSocialLogin 호출
         // 이 메서드 내부에서 DB 조회 및 저장이 모두 처리됩니다.
         memberService.processSocialLogin(registrationId, socialId, email, nickname);
 
-        // 3. 우리 앱의 JWT 토큰 발행
+        // 3. JWT 토큰 발행
         String memberId = registrationId + "_" + socialId; // JWT 발행을 위해 memberId 다시 생성
         Map<String, Object> claims = Map.of("mid", memberId);
         String accessToken = jwtUtil.generateToken(claims, 1);

@@ -1,7 +1,7 @@
 package com.busanit501.team_project.controller;
 
 import com.busanit501.team_project.dto.ChangePasswordRequestDTO;
-import com.busanit501.team_project.dto.MemberDTO;
+import com.busanit501.team_project.dto.APIUserDTO; // MemberDTO 대신 APIUserDTO 사용
 import com.busanit501.team_project.service.MemberService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +23,9 @@ public class MemberController {
     @Tag(name = "멤버 토큰 테스트", description = "멤버 토큰 활성화 테스트")
     @GetMapping("/me")
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-    public MemberDTO me(){
+    public APIUserDTO me(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String memberId = authentication.getName(); // Get the username (memberId) from the authenticated principal
+        String memberId = authentication.getName();
         log.info("Authenticated memberId: " + memberId);
         return memberService.getMember(memberId);
     }
