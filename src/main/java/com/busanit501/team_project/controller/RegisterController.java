@@ -1,6 +1,6 @@
 package com.busanit501.team_project.controller;
 
-import com.busanit501.team_project.dto.MemberDTO;
+import com.busanit501.team_project.dto.APIUserRegisterDTO; // MemberDTO 대신 APIUserRegisterDTO 사용
 import com.busanit501.team_project.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +18,13 @@ public class RegisterController {
     private final MemberService memberService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> join(@Valid @RequestBody MemberDTO memberDTO) {
-        log.info("회원가입 요청 수신 : " + memberDTO);
+    public ResponseEntity<String> join(@Valid @RequestBody APIUserRegisterDTO apiUserRegisterDTO) {
+        log.info("회원가입 요청 수신 : " + apiUserRegisterDTO);
         try {
-            memberService.join(memberDTO);
+            memberService.join(apiUserRegisterDTO);
             return new ResponseEntity<>("회원가입이 완료되었습니다.", HttpStatus.OK);
         }  catch (IllegalArgumentException e) {
-            log.info("회원가입 실패 (비즈니스 로직) : " + e.getMessage());  // MemberServiceImpl에서 던지는 예외를 직접 처리
+            log.info("회원가입 실패 (비즈니스 로직) : " + e.getMessage());
             return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT); // 409 Conflict
         } catch (Exception e) {
             log.info("회원가입 실패 : " + e.getMessage());
