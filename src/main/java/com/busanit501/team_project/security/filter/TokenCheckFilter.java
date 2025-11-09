@@ -34,6 +34,11 @@ public class TokenCheckFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
+        if (path.startsWith("/api/earthquake/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (!path.startsWith("/api/")) {
             filterChain.doFilter(request, response);
             return;
