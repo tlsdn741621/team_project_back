@@ -82,8 +82,31 @@ public class EarthquakeServiceImpl implements EarthquakeService {
             log.info("Flask 서버로부터 응답 수신. 상태: {}, 본문: {}", flaskResponse.statusCode(), flaskResponse.body());
             return flaskResponse.body();
         } else {
-            log.info("USGS로부터 유의미한 지진 데이터를 찾을 수 없습니다.");
-            return "{\"message\": \"No significant earthquake data available.\"}";
+            log.info("USGS로부터 유의미한 지진 데이터를 찾을 수 없습니다. 샘플 데이터를 사용합니다.");
+            List<EarthquakePredictionRequestDTO> sampleData = getSampleEarthquakeDataForDemo();
+            String dtoListJson = gson.toJson(sampleData);
+            log.info("Flask 서버로 {}개의 샘플 DTO를 전송합니다. JSON: {}", sampleData.size(), dtoListJson);
+
+            HttpRequest flaskRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(FLASK_API_URL))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(dtoListJson))
+                    .build();
+
+            HttpResponse<String> flaskResponse = client.send(flaskRequest, HttpResponse.BodyHandlers.ofString());
+            log.info("Flask 서버로부터 샘플 데이터에 대한 응답 수신. 상태: {}, 본문: {}", flaskResponse.statusCode(), flaskResponse.body());
+            return flaskResponse.body();
         }
+    }
+
+    private List<EarthquakePredictionRequestDTO> getSampleEarthquakeDataForDemo() {
+        List<EarthquakePredictionRequestDTO> sampleData = new ArrayList<>();
+        // 샘플 데이터 1: 일본 근처
+        sampleData.add(new EarthquakePredictionRequestDTO(5.5, 35.6895, 139.6917, 10.0));
+        // 샘플 데이터 2: 대만 근처
+        sampleData.add(new EarthquakePredictionRequestDTO(6.2, 23.6978, 120.9605, 20.0));
+        // 샘플 데이터 3: 필리핀 근처
+        sampleData.add(new EarthquakePredictionRequestDTO(5.8, 12.8797, 121.7740, 15.0));
+        return sampleData;
     }
 }
