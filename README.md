@@ -20,62 +20,42 @@
 * **Domain Layer**: @Entity 어노테이션을 가진 JPA 엔티티 클래스
 * **Security (Filter/Util)**: JWT 토큰 생성, 검증 및 요청 필터링을 통해 API 접근 제어
 
-```text
-    Client (React)
-          |
-          |  HTTP Request (JSON)
-          v
-+-----------------------------------------------------------------+
-|  Spring Boot API Server                                         |
-|                                                                 |
-|  [Controller]  <-  [Security Filters (JWT Check)]  <- Request   |
-|      |                                                          |
-|      v                                                          |
-|  [Service]     <-- (AI Prediction) -->  [External AI Server (Flask)]
-|      |                                                          |
-|      v                                                          |
-|  [Repository (JPA)]                                             |
-|      |                                                          |
-|      v                                                          |
-|  [Database (MariaDB/MongoDB)]                                   |
-|                                                                 |
-+-----------------------------------------------------------------+
-3. 핵심 기능 및 흐름
-3.1. JWT 기반 인증 및 인가 흐름
+Client (React)
+      |
+      |  HTTP Request (JSON)
+      v
++-----------------------------------------------------------------+ | Spring Boot API Server | | | | [Controller] <- [Security Filters (JWT Check)] <- Request | | | | | v | | [Service] <-- (AI Prediction) --> [External AI Server (Flask)] | | | | v | | [Repository (JPA)] | | | | | v | | [Database (MariaDB/MongoDB)] | | | +-----------------------------------------------------------------+
+
+
+## 3. 핵심 기능 및 흐름
+
+### 3.1. JWT 기반 인증 및 인가 흐름
+
 Stateless 환경을 위해 JWT를 사용한 토큰 기반 인증 시스템을 구현했습니다.
 
-로그인 및 토큰 발급 (/generateToken): 사용자가 ID/PW로 로그인을 요청하면 APILoginFilter가 요청을 가로채 인증에 성공하면 APILoginSuccessHandler가 Access/Refresh Token을 생성하여 클라이언트에 전달합니다.
+1.  **로그인 및 토큰 발급 (`/generateToken`)**: 사용자가 ID/PW로 로그인을 요청하면 `APILoginFilter`가 요청을 가로채 인증에 성공하면 `APILoginSuccessHandler`가 Access/Refresh Token을 생성하여 클라이언트에 전달합니다.
+2.  **API 요청 및 토큰 검증**: 클라이언트는 API 요청 시 `Authorization: Bearer <Access Token>` 헤더를 포함하여 전송합니다. `TokenCheckFilter`가 `/api/`로 시작하는 모든 요청을 가로채 Access Token의 유효성을 검증합니다.
+3.  **Access Token 만료 및 재발급 (`/refreshToken`)**: Access Token이 만료되면, 클라이언트는 Refresh Token을 사용하여 `/refreshToken` 엔드포인트로 새로운 Access Token 발급을 요청합니다.
 
-API 요청 및 토큰 검증: 클라이언트는 API 요청 시 Authorization: Bearer <Access Token> 헤더를 포함하여 전송합니다. TokenCheckFilter가 /api/로 시작하는 모든 요청을 가로채 Access Token의 유효성을 검증합니다.
+* **주요 구현 코드**: `CustomSecurityConfig.java`, `JWTUtil.java`, `TokenCheckFilter.java`
 
-Access Token 만료 및 재발급 (/refreshToken): Access Token이 만료되면, 클라이언트는 Refresh Token을 사용하여 /refreshToken 엔드포인트로 새로운 Access Token 발급을 요청합니다.
+### 3.2. AI 회귀 예측 기능 흐름
 
-주요 구현 코드: CustomSecurityConfig.java, JWTUtil.java, TokenCheckFilter.java
-
-3.2. AI 회귀 예측 기능 흐름
 외부 Flask 서버와 연동하여 AI 예측 기능을 제공합니다.
 
-예측 요청 (/api/regression/predict): 클라이언트가 예측에 필요한 데이터(DTO)를 POST 요청으로 보냅니다. RegressionController가 이 요청을 받아 RegressionService에 처리를 위임합니다.
+1.  **예측 요청 (`/api/regression/predict`)**: 클라이언트가 예측에 필요한 데이터(DTO)를 POST 요청으로 보냅니다. `RegressionController`가 이 요청을 받아 `RegressionService`에 처리를 위임합니다.
+2.  **외부 AI 서버 통신**: `RegressionServiceImpl`은 `OkHttpClient`를 사용하여 Flask 서버 URL (`/predict/regression`)로 JSON 형식의 요청을 보냅니다.
+3.  **결과 반환**: Flask 서버로부터 받은 응답을 `RegressionResponseDTO`로 파싱하여 컨트롤러에 반환하고, 클라이언트는 최종 예측 결과를 받게 됩니다.
 
-외부 AI 서버 통신: RegressionServiceImpl은 OkHttpClient를 사용하여 Flask 서버 URL (/predict/regression)로 JSON 형식의 요청을 보냅니다.
+* **주요 구현 코드**: `RegressionController.java`, `RegressionServiceImpl.java`
 
-결과 반환: Flask 서버로부터 받은 응답을 RegressionResponseDTO로 파싱하여 컨트롤러에 반환하고, 클라이언트는 최종 예측 결과를 받게 됩니다.
+## 4. 사용된 주요 기술 스택
 
-주요 구현 코드: RegressionController.java, RegressionServiceImpl.java
-
-4. 사용된 주요 기술 스택
-언어: Java 17
-
-프레임워크: Spring Boot 3
-
-데이터베이스: MariaDB (JPA), MongoDB
-
-보안: Spring Security, JWT, OAuth2 (소셜 로그인)
-
-API 문서화: SpringDoc (Swagger UI)
-
-HTTP 클라이언트: OkHttp
-
-빌드 도구: Gradle
-
-기타: Lombok, ModelMapper, QueryDSL
+* **언어**: Java 17
+* **프레임워크**: Spring Boot 3
+* **데이터베이스**: MariaDB (JPA), MongoDB
+* **보안**: Spring Security, JWT, OAuth2 (소셜 로그인)
+* **API 문서화**: SpringDoc (Swagger UI)
+* **HTTP 클라이언트**: OkHttp
+* **빌드 도구**: Gradle
+* **기타**: Lombok, ModelMapper, QueryDSL
