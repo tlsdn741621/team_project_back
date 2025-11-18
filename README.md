@@ -2,7 +2,7 @@
 
 이 프로젝트는 3-Tier 아키텍처(React-Spring Boot-Flask)의 **메인 API 서버**입니다. React 클라이언트의 요청을 받아 인증/인가를 처리하고, 외부 Flask AI 서버와 통신하여 예측 결과를 반환하는 핵심 허브 역할을 수행합니다.
 
-# 1. 프로젝트 개요
+## 1. 프로젝트 개요
 
 * **보안 (Security)**: Spring Security와 JWT (JSON Web Token)를 이용한 강력한 인증/인가 시스템을 제공합니다.
 * **AI 예측**: 외부 Flask AI 서버와 연동하여 특정 데이터(예: 위도, 경도)를 기반으로 재난(지진 등) 발생 가능성을 예측하는 회귀(Regression) 모델 결과를 제공합니다.
@@ -40,9 +40,8 @@
 |  [Database (MariaDB/MongoDB)]                                   |
 |                                                                 |
 +-----------------------------------------------------------------+
-
-## 3. 핵심 기능 및 흐름
-* **3.1.** JWT 기반 인증 및 인가 흐름
+3. 핵심 기능 및 흐름
+3.1. JWT 기반 인증 및 인가 흐름
 Stateless 환경을 위해 JWT를 사용한 토큰 기반 인증 시스템을 구현했습니다.
 
 로그인 및 토큰 발급 (/generateToken): 사용자가 ID/PW로 로그인을 요청하면 APILoginFilter가 요청을 가로채 인증에 성공하면 APILoginSuccessHandler가 Access/Refresh Token을 생성하여 클라이언트에 전달합니다.
@@ -53,7 +52,7 @@ Access Token 만료 및 재발급 (/refreshToken): Access Token이 만료되면,
 
 주요 구현 코드: CustomSecurityConfig.java, JWTUtil.java, TokenCheckFilter.java
 
-* **3.2.** AI 회귀 예측 기능 흐름
+3.2. AI 회귀 예측 기능 흐름
 외부 Flask 서버와 연동하여 AI 예측 기능을 제공합니다.
 
 예측 요청 (/api/regression/predict): 클라이언트가 예측에 필요한 데이터(DTO)를 POST 요청으로 보냅니다. RegressionController가 이 요청을 받아 RegressionService에 처리를 위임합니다.
@@ -64,7 +63,7 @@ Access Token 만료 및 재발급 (/refreshToken): Access Token이 만료되면,
 
 주요 구현 코드: RegressionController.java, RegressionServiceImpl.java
 
-## 4. 사용된 주요 기술 스택
+4. 사용된 주요 기술 스택
 언어: Java 17
 
 프레임워크: Spring Boot 3
