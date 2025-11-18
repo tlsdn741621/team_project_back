@@ -20,11 +20,27 @@
 * **Domain Layer**: @Entity 어노테이션을 가진 JPA 엔티티 클래스
 * **Security (Filter/Util)**: JWT 토큰 생성, 검증 및 요청 필터링을 통해 API 접근 제어
 
-Client (React)
-      |
-      |  HTTP Request (JSON)
-      v
-+-----------------------------------------------------------------+ | Spring Boot API Server | | | | [Controller] <- [Security Filters (JWT Check)] <- Request | | | | | v | | [Service] <-- (AI Prediction) --> [External AI Server (Flask)] | | | | v | | [Repository (JPA)] | | | | | v | | [Database (MariaDB/MongoDB)] | | | +-----------------------------------------------------------------+
+```text
+    Client (React)
+          |
+          |  HTTP Request (JSON)
+          v
++-----------------------------------------------------------------+
+|  Spring Boot API Server                                         |
+|                                                                 |
+|  [Controller]  <-  [Security Filters (JWT Check)]  <- Request   |
+|      |                                                          |
+|      v                                                          |
+|  [Service]     <-- (AI Prediction) -->  [External AI Server (Flask)]
+|      |                                                          |
+|      v                                                          |
+|  [Repository (JPA)]                                             |
+|      |                                                          |
+|      v                                                          |
+|  [Database (MariaDB/MongoDB)]                                   |
+|                                                                 |
++-----------------------------------------------------------------+
+```
 
 
 ## 3. 핵심 기능 및 흐름
